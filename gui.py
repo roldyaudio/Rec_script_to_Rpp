@@ -96,7 +96,7 @@ class MyFrame(ctk.CTkFrame):
                                              border_width=1)
         self.button_continue.grid(row=5, column=1, padx=(25, 25), pady=(10,10),sticky="SE")
 
-        self.label_result = ctk.CTkLabel(master=self, text="Hablame claro menorcito",
+        self.label_result = ctk.CTkLabel(master=self, text="Results will be shown here",
                                                  fg_color="transparent")
         self.label_result.grid(row=5, column=0, sticky="W", padx=(20,20))
 
