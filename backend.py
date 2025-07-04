@@ -13,7 +13,8 @@ import time
 def validate_path(file_path):
     """Validate if the file path exists."""
     # Remove surrounding quotes if present
-    if (file_path.startswith('"') and file_path.endswith('"')) or (file_path.startswith("'") and file_path.endswith("'")):
+    if ((file_path.startswith('"') and file_path.endswith('"'))
+            or (file_path.startswith("'") and file_path.endswith("'"))):
         file_path = file_path[1:-1]
 
     return [os.path.isfile(file_path), file_path]
