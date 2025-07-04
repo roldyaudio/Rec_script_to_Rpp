@@ -2,7 +2,7 @@ import customtkinter as ctk
 import subprocess
 import sys
 from backend import *
-from lib_installer import *
+
 
 # Package installation
 def install_requirements():
@@ -157,9 +157,6 @@ ctk.set_default_color_theme("blue")
 ctk.set_widget_scaling(True)
 ctk.set_window_scaling(True)
 
-
-ensure_pip()
-install_requirements_in_current_directory()
 app = App()
 center_app(app, 560, 320)
 app.mainloop()
