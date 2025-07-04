@@ -4,72 +4,44 @@ import os
 from pathlib import Path
 import concurrent
 from uuid import uuid4
-from concurrent.futures import ThreadPoolExecutor
 from random import randint
-import time
-
-# GUI LINKED FUNCTIONS
-
-def validate_path(file_path):
-    """Validate if the file path exists."""
-    # Remove surrounding quotes if present
-    if (file_path.startswith('"') and file_path.endswith('"')) or (file_path.startswith("'") and file_path.endswith("'")):
-        file_path = file_path[1:-1]
-
-    return [os.path.isfile(file_path), file_path]
-
-def validate_directory(directory_path):
-    """Validate if the directory exists."""
-    # Remove surrounding quotes if present
-    if ((directory_path.startswith('"') and directory_path.endswith('"')) or
-            (directory_path.startswith("'") and directory_path.endswith("'"))):
-        directory_path = directory_path[1:-1]
-    return os.path.isdir(directory_path)
-
-def validate_sample_rate(sample_rate):
-    """Validate the sample rate."""
-    valid_options = ["44100", "48000", "96000",]
-    return sample_rate in valid_options
-
-def validate_excel_column(column_name, script_file):
-    """Validate Excel column name."""
-    # Strip quotes from the file path
-    script_file = script_file.strip('"')
-    try:
-        df = pd.read_excel(script_file)
-        # print("check 2 validate_excel_column")
-        columns = df.columns.tolist()
-        # print("check 3 validate_excel_column")
-        if column_name not in columns:
-            # print(f"Header '{column_name}' not in script")
-            return False
-        return True
-    except Exception as e:
-        print(f"Error reading Excel file: {e}")
-        return False
-
-def process_data(script_path, audio_path, sample_rate, excel_column_1, excel_column_2):
-    """Process all inputs."""
-    start_time = time.time()
-    project_info = create_dataframe_for_rec(script_path, audio_path, excel_column_1, excel_column_2)
-    empty_project = create_empty_project_template(sample_rate)
-    # print(empty_project)
-    new_track = create_empty_track_template("Source_Reference")
-    # print(new_track)
-    project_with_track = add_track_to_project(empty_project, new_track)
-    # print(project_with_track)
-    new_items_template = generate_item_templates_from_dataframe(project_info[0])
-    # print(new_items_template)
-    reaper_project_as_text = add_items_to_track(project_with_track, new_items_template)
-    # print(reaper_project_as_text)
-    export_to_directory(reaper_project_as_text, f"{project_info[2]}.rpp", project_info[1])
-    end_time = time.time()
-    print(f"Elapsed time {end_time - start_time}")
-    # Add your processing logic here
-    return f"Project generated"
+from concurrent.futures import ThreadPoolExecutor
 
 
 # Functions for Dataframe
+def get_rec_script_path():
+    """Returns the path to the file with the recording script"""
+    while True:
+        # Prompt user for input
+        file_path = input("Please enter the path to your Recording Script file: ").strip()
+        # Remove surrounding quotes if present
+        if (file_path.startswith('"') and file_path.endswith('"')) or (
+                file_path.startswith("'") and file_path.endswith("'")):
+            file_path = file_path[1:-1]
+        # Check if the file path is valid
+        if os.path.isfile(file_path):
+            # print(file_path)
+            return file_path
+        else:
+            print("The path you entered is not valid or the file does not exist. Please try again... ")
+
+
+def get_directory_path(path_to_where):
+    """Returns the path to the directory containing whatever you are pointing to"""
+
+    # Prompt user for input
+    dir_path = input(f"Please enter the path leading to your {path_to_where}: ").strip()
+    # Remove surrounding quotes if present
+    if (dir_path.startswith('"') and dir_path.endswith('"')) or (dir_path.startswith("'") and dir_path.endswith("'")):
+        dir_path = dir_path[1:-1]
+    # Check if the directory path is valid
+    if os.path.isdir(dir_path):
+        return dir_path
+    else:
+        print("The path you entered is not valid or the directory does not exist. Please try again.")
+        return None
+
+
 def get_wav_file_paths_list(directory_path):
     """Returns a list with full wav file paths contained in a directory and its subdirectories"""
     wav_file_paths = []
@@ -107,18 +79,34 @@ def new_frame_with_audio_paths(excel_file, list_of_columns, directory_path):
     # Filter DataFrame with only specified columns
     df = df[list_of_columns]
 
+    # print("Checkpoint 1")
+
     # Get list of wav file paths
     wav_file_paths = get_wav_file_paths_list(directory_path)
+
+    # print("Checkpoint 2")
 
     # Map filenames to paths
     filename_to_path = {os.path.basename(path): path for path in wav_file_paths if path is not None}
 
+    # print("Checkpoint 3")
+
     # Add audio path column, defaulting to None if not found
     df['Audio Path'] = df.iloc[:, 0].apply(lambda x: filename_to_path.get(x, None))
 
+    # print("Checkpoint 4")
+
     # Add length column, defaulting to None if path is None
+    # df['Length'] = df['Audio Path'].apply(lambda path: get_length(path) if path else None)
+
+    # print("Checkpoint 5")
+
+    # Add length column, defaulting to None if path is None
+
     with ThreadPoolExecutor() as executor:
         df['Length'] = list(executor.map(lambda path: get_length(path) if path else None, df['Audio Path']))
+
+    # print("Checkpoint 6")
 
     # Add position column, defaulting to None if length is None
     df = assign_positions(df, length_column='Length', separation=4)
@@ -160,24 +148,91 @@ def assign_positions(df, length_column='Length', separation=4):
     return df
 
 
-def create_dataframe_for_rec(rec_script_path, audio_path, filename_column, item_notes_column):
+def create_dataframe_for_rec():
     # get the rec script path and directory
+    rec_script_path = get_rec_script_path()
     project_name = os.path.basename(rec_script_path).split(".")[0]
     rec_script_directory = os.path.dirname(rec_script_path)
 
-    # User needed columns
-    user_columns = [str(filename_column), str(item_notes_column)]
+    # audio location
+    audios_location = ""
 
-    new_data = new_frame_with_audio_paths(rec_script_path, user_columns, audio_path)
+    # dataframe with filename and localized text
+    df = pd.read_excel(rec_script_path)
+    columns = df.columns.tolist()
+
+    # User needed columns
+    user_columns = []
+
+    # New dataframe for item iteration
+
+    dir_is_ok = False
+    while not dir_is_ok:
+        # get audio files directory
+        audios_directory = get_directory_path("Audio files")
+        if audios_directory is None or not os.path.isdir(audios_directory):
+            continue
+        else:
+            audios_location = audios_directory
+            dir_is_ok = True
+
+    user_columns_are_ok = False
+    while not user_columns_are_ok:
+        # get filename and loc text headers
+        column1_name = input("Enter the column name containing filenames: ")
+        if column1_name not in columns:
+            print(f"Header '{column1_name}' not in recording script")
+            continue
+        column2_name = input("Enter the column name containing item notes information: ")
+
+        if column2_name not in columns:
+            print(f"Header '{column2_name}' not in recording script")
+
+        if column1_name not in columns or column2_name not in columns:
+            print("Headers not found in file. Try again")
+            continue
+
+        else:
+            user_columns.append(column1_name)
+            user_columns.append(column2_name)
+            user_columns_are_ok = True
+
+    print("\nGenerating, please wait...\n")
+
+    # start_time = time.time()
+
+    # print("HASTA ACA")
+
+    new_data = new_frame_with_audio_paths(rec_script_path, user_columns, audios_location)
+
+    # print("HASTA ACA")
 
     project_dataframe = new_data
 
+    # print("HASTA ACA")
+
     export_dataframe_to_excel_file(new_data, f"Dataframe_{os.path.basename(rec_script_path)}", rec_script_directory)
+
+    # end_time = time.time()
+    # elapsed_time = end_time - start_time
+    # print(f"Elapsed time {elapsed_time} seconds")
 
     return [project_dataframe, rec_script_directory, project_name]
 
 
 # Functions for Reaper project creation
+def set_project_samplerate():
+    """Ask the user for the Sample rate to use"""
+
+    valid_options = ["44100", "48000", "96000"]
+    while True:
+        sample_rate = input("Input project sample rate: (44100, 48000, or 96000): ")
+        if sample_rate in valid_options:
+            return int(sample_rate)
+        else:
+            print("Invalid input. Please enter one of the specified rates.")
+
+
 def generate_random_uuid():
     """Creates a unique random ID"""
 
@@ -422,3 +477,18 @@ def export_to_directory(text, filename, directory):
         f.write(text)
     return str(full_path)
 
+
+# Execution
+chosen_sample_rate = set_project_samplerate()
+project_info = create_dataframe_for_rec()
+empty_project = create_empty_project_template(chosen_sample_rate)
+# print(empty_project)
+new_track = create_empty_track_template("Source_Reference")
+# print(new_track)
+project_with_track = add_track_to_project(empty_project, new_track)
+# print(project_with_track)
+new_items_template = generate_item_templates_from_dataframe(project_info[0])
+# print(new_items_template)
+reaper_project_as_text = add_items_to_track(project_with_track, new_items_template)
+# print(reaper_project_as_text)
+export_to_directory(reaper_project_as_text, f"{project_info[2]}.rpp", project_info[1])

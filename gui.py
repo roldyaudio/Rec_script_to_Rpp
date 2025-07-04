@@ -1,6 +1,7 @@
 import customtkinter as ctk
 import subprocess
 import sys
+from backend import *
 
 # Package installation
 def install_requirements():
@@ -20,7 +21,7 @@ def install_requirements():
         sys.exit(1)
 
 
-def center_hub(window, width: int, height: int):
+def center_app(window, width: int, height: int):
     """Centers the window to the main display/monitor"""
     screen_width = window.winfo_screenwidth()
     screen_height = window.winfo_screenheight()
@@ -68,7 +69,7 @@ class MyFrame(ctk.CTkFrame):
         self.label_samplerate = ctk.CTkLabel(master=self, text="Sample rate: ", fg_color="transparent")
         self.label_samplerate.grid(row=2, column=0, padx=10, pady=10, sticky="w")
 
-        self.box_samplerate = ctk.CTkComboBox(master=self, values=["44100", "48000", "96000"])
+        self.box_samplerate = ctk.CTkComboBox(master=self, values=["44100", "48000", "96000",])
         self.box_samplerate.grid(row=2, column=1, padx=(0, 230), pady=(10, 10))
 
         # ROW 3
@@ -86,18 +87,52 @@ class MyFrame(ctk.CTkFrame):
         self.entry_excel_column_2.grid(row=4, column=1, padx=10, pady=10, )
 
         # ROW 5
-        self.label_result = ctk.CTkLabel(master=self, text="Results will be shown here", fg_color="transparent")
-        self.label_result.grid(row=5, column=0, sticky="W", padx=(20,20))
+        self.label_result = ctk.CTkLabel(master=self, text="Results will be shown here", fg_color="transparent",
+                                         wraplength=200, width=250)
+        self.label_result.grid(row=5, column=0, padx=(10,10), columnspan=2, sticky="W")
 
         self.button_continue = ctk.CTkButton(master=self, text="Generate", border_spacing=1, border_color="black",
-                                             border_width=1)
-        self.button_continue.grid(row=5, column=1, padx=(25, 25), pady=(10,10),sticky="SE")
+                                             border_width=1, command=self.generate_results, state="enabled")
+        self.button_continue.grid(row=5, column=1, padx=(0, 25), pady=(10,10),sticky="SE")
 
+
+    # METHODS
+    def generate_results(self):
+        script_path = self.entry_script.get()
+        audio_path = self.entry_audio_path.get()
+        sample_rate = self.box_samplerate.get()
+        excel_column_1 = self.entry_excel_column_1.get()
+        excel_column_2 = self.entry_excel_column_2.get()
+
+        if not validate_path(script_path):
+            self.label_result.configure(text="Invalid script file path.")
+            return
+
+        if not validate_directory(audio_path):
+            self.label_result.configure(text="Invalid audio file location.")
+            return
+
+        if not validate_sample_rate(sample_rate):
+            self.label_result.configure(text="Invalid sample rate.")
+            return
+
+        if not validate_excel_column(excel_column_1, script_path):
+            self.label_result.configure(text="Invalid filename header.")
+            return
+
+        if not validate_excel_column(excel_column_2, script_path):
+            self.label_result.configure(text="Invalid item notes header.")
+            return
+
+        result = process_data(script_path, audio_path, sample_rate, excel_column_1, excel_column_2)
+        self.label_result.configure(text=result)
+
+ctk.set_appearance_mode("dark")
+ctk.set_default_color_theme("dark-blue")
+ctk.set_widget_scaling(True)
+ctk.set_window_scaling(True)
 
 install_requirements()
 app = App()
-center_hub(app, 584, 320)
+center_app(app, 560, 320)
 app.mainloop()
-
-prompt = """
-1- Yes, """
