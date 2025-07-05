@@ -49,8 +49,9 @@ def validate_excel_column(column_name, script_file):
         print(f"Error reading Excel file: {e}")
         return False
 
-def process_data(script_path, audio_path, sample_rate, excel_column_1, excel_column_2):
+def process_data(script_path, audio_path, sample_rate, excel_column_1, excel_column_2, update_status):
     """Process all inputs."""
+    update_status("Generating dataframe, please wait...")
     start_time = time.time()
     project_info = create_dataframe_for_rec(script_path, audio_path, excel_column_1, excel_column_2)
     empty_project = create_empty_project_template(sample_rate)
@@ -66,8 +67,9 @@ def process_data(script_path, audio_path, sample_rate, excel_column_1, excel_col
     export_to_directory(reaper_project_as_text, f"{project_info[2]}.rpp", project_info[1])
     end_time = time.time()
     print(f"Elapsed time {end_time - start_time}")
+    update_status("Process completed")
     # Add your processing logic here
-    return f"Project generated"
+
 
 
 # Functions for Dataframe
@@ -108,7 +110,7 @@ def new_frame_with_audio_paths(excel_file, list_of_columns, directory_path):
     # Filter DataFrame with only specified columns
     df = df[list_of_columns]
 
-    # Get list of wav file paths
+    # Get a list of wav file paths
     wav_file_paths = get_wav_file_paths_list(directory_path)
 
     # Map filenames to paths
@@ -117,9 +119,10 @@ def new_frame_with_audio_paths(excel_file, list_of_columns, directory_path):
     # Add audio path column, defaulting to None if not found
     df['Audio Path'] = df.iloc[:, 0].apply(lambda x: filename_to_path.get(x, None))
 
-    # Add length column, defaulting to None if path is None
+    # Add length column, defaulting to None if a path is None
     with ThreadPoolExecutor() as executor:
-        df['Length'] = list(executor.map(lambda path: get_length(path) if path else None, df['Audio Path']))
+        df['Length'] = list(executor.map(lambda path: get_length(path) if path else None,
+                                         df['Audio Path']))
 
     # Add position column, defaulting to None if length is None
     df = assign_positions(df, length_column='Length', separation=4)
@@ -135,6 +138,7 @@ def new_frame_with_audio_paths(excel_file, list_of_columns, directory_path):
 def get_length(file_path):
     audio = AudioSegment.from_file(file_path)
     length = audio.duration_seconds
+    print(os.path.basename(file_path))
     return length
 
 

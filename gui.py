@@ -105,7 +105,15 @@ class MyFrame(ctk.CTkFrame):
         else:
             self.button_continue.configure(state="disabled")
 
+
+
     def generate_results(self):
+
+        def update_status(message):
+            self.label_result.configure(text=message)
+            self.label_result.update()
+
+
         script_path = self.entry_script.get()
         audio_path = self.entry_audio_path.get()
         sample_rate = self.box_samplerate.get()
@@ -132,9 +140,8 @@ class MyFrame(ctk.CTkFrame):
             self.label_result.configure(text=f"Not in excel file headers.")
             return
 
-
-
-        result = process_data(script_path.strip('"'), audio_path.strip('"'), sample_rate, excel_column_1, excel_column_2,)
+        result = process_data(script_path.strip('"'), audio_path.strip('"'), sample_rate, excel_column_1, excel_column_2,
+                              update_status)
         self.label_result.configure(text=result)
 
 
