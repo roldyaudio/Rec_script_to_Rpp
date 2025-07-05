@@ -2,24 +2,7 @@ import customtkinter as ctk
 import subprocess
 import sys
 from backend import *
-
-
-# Package installation
-def install_requirements():
-    try:
-        result = subprocess.run([sys.executable, "-m", "pip", "install", "-r", "requirements.txt"],
-                                capture_output=True, text=True)
-
-        if result.returncode == 0:
-            print("Dependencies installed successfully.")
-            if "Requirement already satisfied" in result.stdout:
-                print("Some packages were already installed.")
-        else:
-            print(f"Error installing dependencies: {result.stderr}")
-            sys.exit(1)
-    except Exception as e:
-        print(f"An unexpected error occurred: {e}")
-        sys.exit(1)
+from lib_installer import *
 
 
 def center_app(window, width: int, height: int):
@@ -157,6 +140,7 @@ ctk.set_default_color_theme("blue")
 ctk.set_widget_scaling(True)
 ctk.set_window_scaling(True)
 
+install_requirements_in_directory("C:/Apps/Rec_script_to_Rpp")
 app = App()
 center_app(app, 560, 320)
 app.mainloop()
