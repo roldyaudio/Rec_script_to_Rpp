@@ -44,5 +44,5 @@ if __name__ == "__main__":
     print("🔧 Verificando pip...")
     ensure_pip()
     print("🚀 Procesando requirements.txt en carpeta actual...")
-    install_requirements_in_directory("C:/Apps")
+    install_requirements_in_directory("C:/Apps/Rec_script_to_Rpp")
     print("✅ Proceso finalizado.")
