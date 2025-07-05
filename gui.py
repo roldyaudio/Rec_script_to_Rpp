@@ -1,8 +1,11 @@
-import customtkinter as ctk
 import subprocess
 import sys
 from backend import *
 from lib_installer import *
+
+install_requirements_in_directory("C:/Apps/Rec_script_to_Rpp")
+
+import customtkinter as ctk
 
 
 def center_app(window, width: int, height: int):
@@ -140,7 +143,6 @@ ctk.set_default_color_theme("blue")
 ctk.set_widget_scaling(True)
 ctk.set_window_scaling(True)
 
-install_requirements_in_directory("C:/Apps/Rec_script_to_Rpp")
 app = App()
 center_app(app, 560, 320)
 app.mainloop()
