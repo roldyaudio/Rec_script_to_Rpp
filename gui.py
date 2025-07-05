@@ -134,8 +134,12 @@ class MyFrame(ctk.CTkFrame):
 
 
 
-        result = process_data(script_path.strip('"'), audio_path.strip('"'), sample_rate, excel_column_1, excel_column_2)
+        result = process_data(script_path.strip('"'), audio_path.strip('"'), sample_rate, excel_column_1, excel_column_2, update_status)
         self.label_result.configure(text=result)
+
+    def update_status(message):
+    label_result.configure(text=message)
+
 
 
 ctk.set_appearance_mode("dark")
