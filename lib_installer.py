@@ -20,20 +20,19 @@ def install_requirements_in_directory(base_dir):
         for file in files:
             if file == "requirements.txt":
                 req_path = os.path.join(root, file)
-                print(f"\nInstalando dependencias desde {req_path} ...")
+                print(f"\n🚀 Instalando dependencias desde: {req_path}")
+                print(f"📦 Ejecutando: {sys.executable} -m pip install -r {req_path}")
+                
+                # Ejecuta y muestra TODO el output en tiempo real
                 result = subprocess.run(
-                    [sys.executable, "-m", "pip", "install", "-r", req_path],
-                    capture_output=True, text=True
+                    [sys.executable, "-m", "pip", "install", "-r", req_path]
                 )
+                
                 if result.returncode == 0:
                     print(f"✅ Instalado correctamente desde {req_path}")
-                    if "Requirement already satisfied" in result.stdout:
-                        print("   Algunos paquetes ya estaban instalados.")
-                        time.sleep(5)
                 else:
-                    print(f"❌ Error instalando desde {req_path}: {result.stderr}")
+                    print(f"❌ Error instalando desde {req_path}")
                     sys.exit(1)
-                    time.sleep(5)
 
 if __name__ == "__main__":
     if sys.version_info >= (3, 13):
