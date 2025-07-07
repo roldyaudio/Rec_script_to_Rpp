@@ -6,42 +6,42 @@ import time
 def ensure_pip():
     try:
         import pip
-        print("✅ pip ya está instalado.")
+        print("✅ pip is already installed.")
     except ImportError:
-        print("⚠️ pip no encontrado. Instalando con ensurepip...")
+        print("⚠️ pip not found. Installing with ensurepip...")
         subprocess.check_call([sys.executable, "-m", "ensurepip"])
-        print("✅ pip instalado correctamente.")
-
+        print("✅ pip installed successfully.")
 
 
 def install_requirements_in_directory(base_dir):
-    # Recorre todas las carpetas buscando archivos requirements.txt
+    # Walk through all folders looking for requirements.txt files
     for root, dirs, files in os.walk(base_dir):
         for file in files:
             if file == "requirements.txt":
                 req_path = os.path.join(root, file)
-                print(f"\n🚀 Instalando dependencias desde: {req_path}")
-                print(f"📦 Ejecutando: {sys.executable} -m pip install -r {req_path}")
-                
-                # Ejecuta y muestra TODO el output en tiempo real
+                print(f"\n🚀 Installing dependencies from: {req_path}")
+                print(f"📦 Running: {sys.executable} -m pip install -r {req_path}")
+
+                # Run and show ALL output in real time
                 result = subprocess.run(
                     [sys.executable, "-m", "pip", "install", "-r", req_path]
                 )
-                
+
                 if result.returncode == 0:
-                    print(f"✅ Instalado correctamente desde {req_path}")
+                    print(f"✅ Successfully installed from {req_path}")
                 else:
-                    print(f"❌ Error instalando desde {req_path}")
+                    print(f"❌ Error installing from {req_path}")
                     sys.exit(1)
+
 
 if __name__ == "__main__":
     if sys.version_info >= (3, 13):
-        print("❌ Este script requiere Python 3.12 o menor, porque pydub necesita audioop.")
+        print("❌ This script requires Python 3.12 or lower, because pydub needs audioop.")
         time.sleep(5)
         sys.exit(1)
-        
-    print("🔧 Verificando pip...")
+
+    print("🔧 Checking pip...")
     ensure_pip()
-    print("🚀 Procesando requirements.txt en carpeta actual...")
+    print("🚀 Processing requirements.txt in current folder...")
     install_requirements_in_directory("C:/Apps/Rec_script_to_Rpp")
-    print("✅ Proceso finalizado.")
+    print("✅ Process completed.")
