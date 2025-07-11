@@ -1,4 +1,5 @@
-﻿from pydub import AudioSegment
+﻿import soundfile as sf
+from pydub import AudioSegment
 import pandas as pd
 import os
 from pathlib import Path
@@ -121,7 +122,7 @@ def new_frame_with_audio_paths(excel_file, list_of_columns, directory_path):
 
     # Add length column, defaulting to None if a path is None
     with ThreadPoolExecutor() as executor:
-        df['Length'] = list(executor.map(lambda path: get_length(path) if path else None,
+        df['Length'] = list(executor.map(lambda path: get_length_soundfile(path) if path else None,
                                          df['Audio Path']))
 
     # Add position column, defaulting to None if length is None
@@ -139,6 +140,12 @@ def get_length(file_path):
     audio = AudioSegment.from_file(file_path)
     length = audio.duration_seconds
     print(os.path.basename(file_path))
+    return length
+
+
+def get_length_soundfile(file_path):
+    audio_info = sf.info(file_path)
+    length = audio_info.duration
     return length
 
 
