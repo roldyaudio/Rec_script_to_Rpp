@@ -1,10 +1,10 @@
 import subprocess
 import sys
-from backend import *
 from lib_installer import *
 
 install_requirements_in_directory("C:/Apps/Rec_script_to_Rpp")
 
+from backend import *
 import customtkinter as ctk
 
 
